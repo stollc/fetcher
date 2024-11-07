@@ -20,10 +20,15 @@ fetcher.interceptors.error = function (error) {
 };
 
 // fetch
-const get = await fetcher.get("https://httpbin.org/get");
+const payload = {
+  method: "post",
+  url: url,
+  body: JSON.stringify(data),
+  responseType: "json", // json, text, blob
+  headers: { "Content-Type": "application/json" },
+};
+const results = await fetcher.request(payload);
 
-//response types
-// blob
-// json
-// text
+// helpers (get, post, download, upload)
+const get = await fetcher.get("https://httpbin.org/get");
 ```
