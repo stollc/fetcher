@@ -19,5 +19,11 @@ fetcher.interceptors.error = function (error) {
   return error;
 };
 
+// fetch
 const get = await fetcher.get("https://httpbin.org/get");
+
+//response types
+// blob
+// json
+// text
 ```
