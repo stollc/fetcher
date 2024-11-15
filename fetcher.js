@@ -1,5 +1,20 @@
-function err(message, status, url) {
-  let e = resp(true, null, { message, status, url });
+class FetcherError extends Error {
+  constructor(o) {
+    super(o.message);
+    this.status = o.status;
+    this.url = o.url;
+    if (o.name) this.name = o.name;
+    if (o.stack) this.stack = o.stack;
+  }
+}
+
+function err(message, status, url, name, stack) {
+  if (!message) {
+    if (status == 405) message = "Method not allowed";
+    else message = "Something went wrong";
+  }
+  let e = resp(true, null, { message, status, url, name, stack });
+
   e = fetcher.interceptors.error(e);
   return e;
 }
@@ -37,13 +52,13 @@ const fetcher = {
 
       let response = await fetch(payload.url, payload);
 
-      if (!response.ok) return err(response.statusText, response.status, response.url);
+      if (!response.ok) throw new FetcherError({ message: response.statusText, status: response.status, url: response.url });
 
       let data = null;
       if (payload.responseType.toLowerCase() == "json") data = await response.json();
       else if (payload.responseType.toLowerCase() == "text") data = await response.text();
       else if (payload.responseType.toLowerCase() == "blob") data = await response.blob();
-      else return err(`ResponseType ${payload.responseType} not supported`, response.status, response.url);
+      else throw new FetcherError({ message: `ResponseType ${payload.responseType} not supported`, status: response.status, url: response.url });
 
       response.data = data;
       response.responseType = payload.responseType;
@@ -52,7 +67,20 @@ const fetcher = {
 
       return resp(false, data);
     } catch (error) {
-      return err(JSON.stringify(error.message || "Something went wrong"), 503, payload.url);
+      if (error instanceof FetcherError) {
+        if (!error.message) {
+          if (error.status == 405) error.message = "Method Not Allowed";
+          else error.message = "Something went wrong";
+        }
+      } else if (error instanceof Error) {
+        var message = JSON.stringify(error.message || "Something went wrong");
+        let fetcher_error = new FetcherError({ message, status: null, url: payload.url, name: error.name, stack: error.stack });
+        error = fetcher_error;
+      }
+
+      let e = resp(true, null, error);
+      e = fetcher.interceptors.error(e);
+      return e;
     }
   },
 
