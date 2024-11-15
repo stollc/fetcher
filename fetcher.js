@@ -15,7 +15,7 @@ function resp(isError, data, error) {
 const fetcher = {
   // PROPERTIES
   defaults: {
-    headers: { "Content-Type": "application/json" },
+    headers: {},
     responseType: "json",
   },
 
