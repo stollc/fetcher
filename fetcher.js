@@ -8,17 +8,6 @@ class FetcherError extends Error {
   }
 }
 
-function err(message, status, url, name, stack) {
-  if (!message) {
-    if (status == 405) message = "Method not allowed";
-    else message = "Something went wrong";
-  }
-  let e = resp(true, null, { message, status, url, name, stack });
-
-  e = fetcher.interceptors.error(e);
-  return e;
-}
-
 function resp(isError, data, error) {
   return { isError, data, error };
 }
