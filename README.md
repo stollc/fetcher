@@ -2,6 +2,12 @@
 
 Fetcher is a lightweight wrapper around the Fetch API that includes request/response interceptors, error handling, and helper functions for common HTTP requests.
 
+## Installation
+
+```sh
+npm install @stollc/fetcher
+```
+
 ## Usage
 
 ### Importing Fetcher

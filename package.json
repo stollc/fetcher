@@ -1,0 +1,20 @@
+{
+  "name": "@stollc/fetcher",
+  "version": "1.0.0",
+  "description": "Fetcher is a lightweight wrapper around the Fetch API that includes request/response interceptors, error handling, and helper functions for common HTTP requests.",
+  "main": "fetcher.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stollc/fetcher.git"
+  },
+  "author": "Christoffer Stoll",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/stollc/fetcher/issues"
+  },
+  "homepage": "https://github.com/stollc/fetcher#readme",
+  "files": ["fetcher.js"]
+}
