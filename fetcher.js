@@ -21,15 +21,9 @@ const fetcher = {
 
   // INTERCEPTORS
   interceptors: {
-    request(payload) {
-      return payload;
-    },
-    response(response) {
-      return response;
-    },
-    error(error) {
-      return error;
-    },
+    request: (payload) => payload,
+    response: (response) => response,
+    error: (error) => error,
   },
 
   // REQUEST HANDLER
@@ -40,48 +34,41 @@ const fetcher = {
       payload = this.interceptors.request(payload);
 
       let response = await fetch(payload.url, payload);
-
       if (!response.ok) throw new FetcherError({ message: response.statusText, status: response.status, url: response.url });
 
       const responseParsers = {
         json: (res) => res.json(),
         text: (res) => res.text(),
         blob: (res) => res.blob(),
+        stream: (res) => res.body, // Don't await ReadableStream
       };
 
-      if (!responseParsers[payload.responseType]) throw new FetcherError({ message: `ResponseType ${payload.responseType} not supported`, status: response.status, url: response.url });
+      if (!responseParsers[payload.responseType]) {
+        throw new FetcherError({ message: `ResponseType ${payload.responseType} not supported`, status: response.status, url: response.url });
+      }
 
-      response.data = await responseParsers[payload.responseType](response);
+      response.data = await (payload.responseType === "stream" ? responseParsers.stream(response) : responseParsers[payload.responseType](response));
       response.responseType = payload.responseType;
       response = this.interceptors.response(response);
 
       return resp(false, response.data);
     } catch (error) {
       if (error instanceof FetcherError) {
-        error.message ||= error.status == 405 ? "Method Not Allowed" : "Something went wrong";
+        error.message = error.message || (error.status == 405 ? "Method Not Allowed" : "Something went wrong");
       } else if (error instanceof Error) {
-        let fetcher_error = new FetcherError({ message: error.message || "Something went wrong", status: null, url: payload.url, name: error.name });
-        error = fetcher_error;
+        error = new FetcherError({ message: error.message || "Something went wrong", status: null, url: payload.url, name: error.name });
       }
 
-      let e = resp(true, null, error);
-      return this.interceptors.error(e);
+      return this.interceptors.error(resp(true, null, error));
     }
   },
 
   // HELPER FUNCTIONS
-  async get(url) {
-    return await this.request({ method: "get", url });
-  },
-  async post(url, data) {
-    return await this.request({ method: "post", url, body: data ? JSON.stringify(data) : null });
-  },
-  async download(url, data = null) {
-    return await this.request({ method: "post", url, body: data ? JSON.stringify(data) : null, responseType: "blob" });
-  },
-  async upload(url, data = null) {
-    return await this.request({ method: "post", url, body: data instanceof FormData ? data : JSON.stringify(data) });
-  },
+  get: (url) => fetcher.request({ method: "get", url }),
+  post: (url, data) => fetcher.request({ method: "post", url, body: data ? JSON.stringify(data) : null }),
+  download: (url, data = null) => fetcher.request({ method: "post", url, body: data ? JSON.stringify(data) : null, responseType: "blob" }),
+  upload: (url, data = null) => fetcher.request({ method: "post", url, body: data instanceof FormData ? data : JSON.stringify(data) }),
+  stream: (url) => fetcher.request({ method: "get", url, responseType: "stream" }),
 };
 
 export default fetcher;

@@ -1,79 +1,83 @@
 # Fetcher - Simple Fetch Wrapper
 
-## **Usage Example**
+Fetcher is a lightweight wrapper around the Fetch API that includes request/response interceptors, error handling, and helper functions for common HTTP requests.
 
-### **Importing Fetcher**
+## Usage
 
-```js
+### Importing Fetcher
+
+```javascript
 import fetcher from "./fetcher";
 ```
 
----
+### Setting Up Interceptors
 
-### **Setting Up Interceptors**
-
-```js
-fetcher.interceptors.request = function (payload) {
-  console.log("Request Interceptor:", payload);
+```javascript
+fetcher.interceptors.request = (payload) => {
+  console.log("REQ", payload);
   return payload;
 };
 
-fetcher.interceptors.response = function (response) {
-  console.log("Response Interceptor:", response);
+fetcher.interceptors.response = (response) => {
+  console.log("RES", response);
   return response;
 };
 
-fetcher.interceptors.error = function (error) {
-  console.error("Error Interceptor:", error);
+fetcher.interceptors.error = (error) => {
+  console.log("ERR", error);
   return error;
 };
 ```
 
----
+### Making Requests
 
-### **Making a Request**
+#### Generic Request
 
-```js
+```javascript
 const payload = {
   method: "post",
   url: "https://httpbin.org/post",
   body: JSON.stringify({ key: "value" }),
-  responseType: "json", // json, text, or blob
+  responseType: "json", // json, text, blob, stream
   headers: { "Content-Type": "application/json" },
 };
 
-const results = await fetcher.request(payload);
-console.log("Fetch Results:", results);
+const result = await fetcher.request(payload);
 ```
 
----
+#### Using Helper Functions
 
-### **Using Helper Methods**
-
-```js
-const getResponse = await fetcher.get("https://httpbin.org/get");
-console.log("GET Response:", getResponse);
-
-const postResponse = await fetcher.post("https://httpbin.org/post", { key: "value" });
-console.log("POST Response:", postResponse);
-
-const downloadResponse = await fetcher.download("https://httpbin.org/image");
-console.log("Download Response:", downloadResponse);
-
-const formData = new FormData();
-formData.append("file", new Blob(["Hello World"], { type: "text/plain" }), "hello.txt");
-
-const uploadResponse = await fetcher.upload("https://httpbin.org/post", formData);
-console.log("Upload Response:", uploadResponse);
+```javascript
+const getResult = await fetcher.get("https://httpbin.org/get");
+const postResult = await fetcher.post("https://httpbin.org/post", { name: "John Doe" });
+const downloadResult = await fetcher.download("https://httpbin.org/download");
+const uploadResult = await fetcher.upload("https://httpbin.org/upload", formData);
+const streamResult = await fetcher.stream("https://httpbin.org/stream/10");
 ```
 
----
+### Handling Streams
 
-### **Features**
+```javascript
+const response = await fetcher.stream("https://httpbin.org/stream/10");
 
-- ✅ Supports `GET`, `POST`, `DOWNLOAD`, and `UPLOAD` requests.
-- ✅ Customizable interceptors for requests, responses, and errors.
-- ✅ Automatically parses JSON, text, and blob responses.
-- ✅ Error handling with `FetcherError` for better debugging.
+if (response.isError) {
+  console.error("Stream Error:", response.error);
+} else {
+  const reader = response.data.getReader();
+  const decoder = new TextDecoder();
 
-🚀 **Enjoy seamless API requests with Fetcher!**
+  async function readStream() {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      console.log(decoder.decode(value));
+    }
+  }
+
+  readStream();
+}
+```
+
+## License
+
+MIT
