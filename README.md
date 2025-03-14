@@ -13,7 +13,7 @@ npm install @stollc/fetcher
 ### Importing Fetcher
 
 ```javascript
-import fetcher from "./fetcher";
+import fetcher from "@stollc/fetcher";
 ```
 
 ### Setting Up Interceptors
