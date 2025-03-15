@@ -57,10 +57,11 @@ const fetcher = {
         error = new FetcherError({
           message: error.message || "Something went wrong",
           status: error.status || 500,
-          url: payload.url,
-          name: error.name,
+          url: payload?.url || "",
+          name: error.name || "FetchError",
         });
       }
+
       let err = this.interceptors.error(error);
       if (!err) err = error;
       return resp(true, null, err);
