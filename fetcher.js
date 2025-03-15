@@ -1,7 +1,7 @@
 class FetcherError extends Error {
   constructor(o) {
     super(o.message);
-    this.status = o.status;
+    this.status = o.status || 500;
     this.url = o.url;
     if (o.name) this.name = o.name;
     Error.captureStackTrace?.(this, FetcherError);
@@ -53,13 +53,17 @@ const fetcher = {
 
       return resp(false, response.data);
     } catch (error) {
-      if (error instanceof FetcherError) {
-        error.message = error.message || (error.status == 405 ? "Method Not Allowed" : "Something went wrong");
-      } else if (error instanceof Error) {
-        error = new FetcherError({ message: error.message || "Something went wrong", status: null, url: payload.url, name: error.name });
+      if (!(error instanceof FetcherError)) {
+        error = new FetcherError({
+          message: error.message || "Something went wrong",
+          status: error.status || 500,
+          url: payload.url,
+          name: error.name,
+        });
       }
-
-      return this.interceptors.error(resp(true, null, error));
+      const err = this.interceptors.error(error);
+      if (!err) err = error;
+      return resp(true, null, err);
     }
   },
 
