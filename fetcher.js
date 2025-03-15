@@ -61,7 +61,7 @@ const fetcher = {
           name: error.name,
         });
       }
-      const err = this.interceptors.error(error);
+      let err = this.interceptors.error(error);
       if (!err) err = error;
       return resp(true, null, err);
     }
