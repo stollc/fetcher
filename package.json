@@ -1,6 +1,6 @@
 {
   "name": "@stollc/fetcher",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Fetcher is a lightweight wrapper around the Fetch API that includes request/response interceptors, error handling, and helper functions for common HTTP requests.",
   "main": "fetcher.js",
   "scripts": {

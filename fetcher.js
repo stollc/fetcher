@@ -50,7 +50,7 @@ const fetcher = {
       response.data = await (payload.responseType === "stream" ? responseParsers.stream(fetch_response) : responseParsers[payload.responseType](fetch_response));
       return this._response(response);
     } catch (error) {
-      return this._error(response, error.message || "Something went wrong");
+      return this._error(response, error.message);
     }
   },
 
@@ -70,7 +70,19 @@ const fetcher = {
   },
 
   _error(response, message) {
-    response.error = message;
+    const statusMessages = {
+      400: "Bad Request - The server could not understand the request.",
+      401: "Unauthorized - Authentication is required.",
+      403: "Forbidden - You don't have permission to access this resource.",
+      404: "Not Found - The requested resource could not be found.",
+      408: "Request Timeout - The server timed out waiting for the request.",
+      429: "Too Many Requests - You have hit the rate limit.",
+      500: "Internal Server Error - Something went wrong on the server.",
+      502: "Bad Gateway - Received an invalid response from the upstream server.",
+      503: "Service Unavailable - The server is currently unavailable.",
+      504: "Gateway Timeout - The server didn't respond in time.",
+    };
+    response.error = message || statusMessages[response.status] || "Unknown error";
     response.ok = false;
     response.data = null;
     response.status = response.status || 500;
