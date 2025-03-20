@@ -40,17 +40,16 @@ const fetcher = {
         json: (res) => res.json(),
         text: (res) => res.text(),
         blob: (res) => res.blob(),
-        stream: (res) => res.body, // Don't await ReadableStream
       };
 
       if (!responseParsers[payload.responseType]) {
-        return this._error(response, `ResponseType ${payload.responseType} not supported`);
+        return this._error(response, `ResponseType ${payload.responseType} not supported`, 400);
       }
 
-      response.data = await (payload.responseType === "stream" ? responseParsers.stream(fetch_response) : responseParsers[payload.responseType](fetch_response));
+      response.data = await responseParsers[payload.responseType](fetch_response);
       return this._response(response);
     } catch (error) {
-      return this._error(response, error.message);
+      return this._error(response, error.message, 500);
     }
   },
 
@@ -59,17 +58,15 @@ const fetcher = {
   post: (url, data) => fetcher.request({ method: "post", url, body: data ? JSON.stringify(data) : null }),
   download: (url, data = null) => fetcher.request({ method: "post", url, body: data ? JSON.stringify(data) : null, responseType: "blob" }),
   upload: (url, data = null) => fetcher.request({ method: "post", url, body: data instanceof FormData ? data : JSON.stringify(data) }),
-  stream: (url) => fetcher.request({ method: "get", url, responseType: "stream" }),
 
   // INTERNAL FUNCTIONS
-
   _response(response) {
     let resp = this.interceptors.response(response);
     if (!resp) resp = response;
     return { data: resp.data, error: null };
   },
 
-  _error(response, message) {
+  _error(response, message, status) {
     const statusMessages = {
       400: "Bad Request - The server could not understand the request.",
       401: "Unauthorized - Authentication is required.",
@@ -82,10 +79,11 @@ const fetcher = {
       503: "Service Unavailable - The server is currently unavailable.",
       504: "Gateway Timeout - The server didn't respond in time.",
     };
-    response.error = message || statusMessages[response.status] || "Unknown error";
+    status = status || response.status || 500;
+    response.error = message || statusMessages[status] || "Unknown error";
     response.ok = false;
     response.data = null;
-    response.status = response.status || 500;
+    response.status = status;
     let resp = this.interceptors.error(response);
     if (!resp) resp = response;
     return { data: null, error: resp.error };
