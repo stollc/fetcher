@@ -1,7 +1,7 @@
 const fetcher = {
   // PROPERTIES
   defaults: {
-    headers: {},
+    headers: { "Content-Type": "application/json" },
     responseType: "json",
   },
 
